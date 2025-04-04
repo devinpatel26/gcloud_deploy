@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: django_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/home/skillnest
+      - static_volume:/home/skillnest/staticfiles
+      - media_volume:/home/skillnest/media
+    env_file:
+      - .env.prod
+    networks:
+      - prod_network
+    command: /usr/bin/supervisord
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    volumes:
+      - static_volume:/home/skillnest/staticfiles
+      - media_volume:/home/skillnest/media
+    networks:
+      - prod_network
+
+volumes:
+  postgres_data:
+    external: true
+  static_volume:
+  media_volume:
+
+networks:
+  prod_network:
+    external: true

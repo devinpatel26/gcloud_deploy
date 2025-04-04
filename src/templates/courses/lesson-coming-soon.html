@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+
+<h1 >This is the lesson name - {{ object.title }}</h1>
+
+{% if object.is_coming_soon %}
+    <h2>Coming Soon</h2>
+{% endif %}
+
+
+{% endblock content %}

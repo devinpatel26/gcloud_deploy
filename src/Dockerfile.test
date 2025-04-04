@@ -1,0 +1,45 @@
+# FROM python:3.12
+
+# # Set unbuffered output
+# ENV PYTHONUNBUFFERED=1
+
+# # Install supervisor
+# RUN apt-get update && apt-get install -y supervisor
+
+# # Create directory for supervisor logs
+# RUN mkdir -p /var/log/supervisor
+
+# # Set working directory
+# WORKDIR /django
+
+# # Copy requirements and install them
+# COPY ./requirements.txt .
+# RUN pip3 install -r requirements.txt
+
+# # Copy Supervisor configuration file
+# COPY ./supervisor-test.conf /etc/supervisor/conf.d/
+
+# # Copy the rest of your application
+# COPY . .
+
+# # Set the default command to run Supervisor with your configuration
+# CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisor-test.conf"]
+
+
+
+FROM python:3.12
+
+ENV PYTHONUNBUFFERED = 1
+
+RUN apt-get update && apt-get install supervisor -y
+
+WORKDIR /home/skillnest
+
+COPY ./requirements.txt .
+
+RUN pip3 install -r requirements.txt
+
+COPY ./supervisor-test.conf /etc/supervisor/conf.d/
+
+COPY . .
+

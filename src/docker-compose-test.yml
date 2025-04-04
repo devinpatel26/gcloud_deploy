@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  test_postgres:
+    container_name: test_postgres
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test_skillnest
+    expose:
+      - 5432
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
+    networks:
+      - test_network
+
+  api_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: test_django_app
+    volumes:
+      - .:/home/skillnest
+      - test_static_volume:/home/skillnest/staticfiles
+      - test_media_volume:/home/skillnest/media
+      - ./log:/var/log
+    env_file:
+      - .env.test
+    ports:
+      - "5001:8000"
+    depends_on:
+      - test_postgres
+    networks:
+      - test_network
+    # Use the custom Supervisor configuration file (make sure supervisord.conf is at project root)
+    command: /usr/bin/supervisord 
+
+  nginx_test:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: test_nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - api_test
+    volumes:
+      - test_static_volume:/home/skillnest/staticfiles
+      - test_media_volume:/home/skillnest/media
+    networks:
+      - test_network
+
+volumes:
+  test_postgres_data:
+    external: true
+  test_static_volume:
+  test_media_volume:
+
+networks:
+  test_network:
+    external: true
