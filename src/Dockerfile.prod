@@ -1,15 +1,73 @@
-FROM python:3.12
+# FROM python:3.12
 
-ENV PYTHONUNBUFFERED = 1
+# ENV PYTHONUNBUFFERED = 1
 
-RUN apt-get update && apt-get install supervisor -y
+# RUN apt-get update && apt-get install supervisor -y
 
+# WORKDIR /home/skillnest
+
+# COPY ./requirements.txt .
+
+# RUN pip3 install -r requirements.txt
+
+# COPY ./supervisor.conf /etc/supervisor/conf.d/
+
+# COPY . .
+
+
+FROM python:3.12-slim
+
+# Don’t write .pyc files, and buffer stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install system deps
+RUN apt-get update \
+ && apt-get install -y \
+      build-essential \
+      curl \
+      git \
+      supervisor \
+      nodejs \
+      npm \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+# Set your app root (this is where your manage.py lives)
 WORKDIR /home/skillnest
 
-COPY ./requirements.txt .
-
-RUN pip3 install -r requirements.txt
-
-COPY ./supervisor.conf /etc/supervisor/conf.d/
-
+# Copy everything from src/ (because Dockerfile is in src/)
 COPY . .
+
+# Install Python deps
+RUN pip install --upgrade pip \
+ && pip install -r requirements.txt
+
+# ——— Tailwind build ———
+
+# 1) Switch into your Tailwind app’s npm folder
+#    (adjust if your package.json is in a different sub‑folder)
+WORKDIR /home/skillnest/theme/static_src
+
+# 2) Install Node deps & fix exec perms
+RUN npm install \
+ && chmod +x node_modules/.bin/*
+
+# 3) Back to Django root
+WORKDIR /home/skillnest
+
+# 4) Build Tailwind & collect static
+RUN python manage.py tailwind install \
+ && python manage.py tailwind build \
+ && python manage.py collectstatic --noinput
+
+# ——— Runtime setup ———
+
+# Copy supervisor config
+COPY supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+
+# Expose port
+EXPOSE 8000
+
+# Start Supervisor (which will launch Gunicorn, etc.)
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisor.conf"]

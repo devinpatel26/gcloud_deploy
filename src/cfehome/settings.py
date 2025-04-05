@@ -23,7 +23,7 @@ ENVIRONMENT = config('ENVIRONMENT', default='production')
 # Email settings
 
 BASE_URL = config("BASE_URL", default="http://localhost:8000")
-NPM_BIN_PATH = 'npm.cmd'
+NPM_BIN_PATH = '/usr/bin/npm'
 
 # default backend
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
